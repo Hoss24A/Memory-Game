@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Match Master</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card-flip {
+            transition: transform 1s;
+            transform-style: preserve-3d;
+            height: 120px;
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .card-flip.flipped {
+            transform: rotateY(180deg);
+            background-color: white;
+            color: black;
+        }
+
+        .card-body {
+            backface-visibility: visible;
+        }
+
+        .display-6 {
+            font-size: 2rem;
+            font-weight: 300;
+        }
+
+        @media (max-width: 576px) {
+            .card-flip {
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const MemoryMatchMaster = () => {
+            const [cards, setCards] = useState([]);
+            const [flipped, setFlipped] = useState([]);
+            const [solved, setSolved] = useState([]);
+            const [moves, setMoves] = useState(0);
+            const [gameWon, setGameWon] = useState(false);
+            const [timer, setTimer] = useState(0);
+            const [gameStarted, setGameStarted] = useState(false);
+            
+            const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🦁', '🐮'];
+            
+            // Initialize game
+            const initGame = () => {
+                // Create pairs of cards
+                const cardPairs = [...emojis, ...emojis];
+                
+                // Shuffle cards
+                const shuffledCards = cardPairs
+                    .sort(() => Math.random() - 0.5)
+                    .map((emoji, index) => ({ id: index, emoji, flipped: false }));
+                    
+                setCards(shuffledCards);
+                setFlipped([]);
+                setSolved([]);
+                setMoves(0);
+                setGameWon(false);
+                setTimer(0);
+                setGameStarted(false);
+            };
+            
+            // Handle card click
+            const handleCardClick = (id) => {
+                if (!gameStarted) setGameStarted(true);
+                if (flipped.length === 2 || solved.includes(id) || flipped.includes(id)) return;
+                
+                const newFlipped = [...flipped, id];
+                setFlipped(newFlipped);
+                
+                // If two cards are flipped, check for match
+                if (newFlipped.length === 2) {
+                    setMoves(moves + 1);
+                    const [firstId, secondId] = newFlipped;
+                    const firstCard = cards.find(card => card.id === firstId);
+                    const secondCard = cards.find(card => card.id === secondId);
+                    
+                    if (firstCard.emoji === secondCard.emoji) {
+                        setSolved([...solved, firstId, secondId]);
+                        setFlipped([]);
+                        
+                        // Check if game is won
+                        if (solved.length + 2 === cards.length) {
+                            setGameWon(true);
+                        }
+                    } else {
+                        setTimeout(() => setFlipped([]), 1000);
+                    }
+                }
+            };
+            
+            // Timer effect
+            useEffect(() => {
+                let interval;
+                if (gameStarted && !gameWon) {
+                    interval = setInterval(() => {
+                        setTimer(prevTimer => prevTimer + 1);
+                    }, 1000);
+                }
+                return () => clearInterval(interval);
+            }, [gameStarted, gameWon]);
+            
+            // Initialize game on first render
+            useEffect(() => {
+                initGame();
+            }, []);
+            
+            // Format time
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            };
+            
+            return (
+                <div className="container py-5">
+                    <div className="text-center mb-4">
+                        <h1 className="display-4">Memory Match Master</h1>
+                        <p className="lead">Test your memory by matching pairs of cards!</p>
+                    </div>
+                    
+                    <div className="row mb-4">
+                        <div className="col-md-4 text-center">
+                            <div className="card bg-light">
+                                <div className="card-body">
+                                    <h5 className="card-title">Moves</h5>
+                                    <p className="card-text display-6">{moves}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-4 text-center">
+                            <div className="card bg-light">
+                                <div className="card-body">
+                                    <h5 className="card-title">Time</h5>
+                                    <p className="card-text display-6">{formatTime(timer)}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-4 text-center">
+                            <button className="btn btn-primary btn-lg w-100 h-100" onClick={initGame}>
+                                New Game
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {gameWon && (
+                        <div className="alert alert-success text-center">
+                            <h4>Congratulations! You won!</h4>
+                            <p>You completed the game in {moves} moves and {formatTime(timer)}!</p>
+                        </div>
+                    )}
+                    
+                    <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+                        {cards.map(card => (
+                            <div key={card.id} className="col">
+                                <div 
+                                    className={`card h-100 card-flip ${flipped.includes(card.id) || solved.includes(card.id) ? 'flipped' : ''}`}
+                                    onClick={() => handleCardClick(card.id)}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    <div className="card-body d-flex justify-content-center align-items-center">
+                                        <span className="display-4">
+                                            {flipped.includes(card.id) || solved.includes(card.id) ? card.emoji : '❓'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <footer className="mt-5 text-center text-muted">
+                        <p>Memory Match Master</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<MemoryMatchMaster />, document.getElementById('root'));
+    </script>
+</body>
+</html>
