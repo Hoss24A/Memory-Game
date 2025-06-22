@@ -9,8 +9,17 @@
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
+        :root {
+            --tech-primary: #00ff88;
+            --tech-dark: #121212;
+            --tech-darker: #0a0a0a;
+            --tech-secondary: #00cc66;
+            --tech-accent: #0077ff;
+        }
+        
         body {
-            background-color: #f8f9fa;
+            background-color: var(--tech-darker);
+            color: #e0e0e0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
@@ -18,15 +27,17 @@
             transition: transform 0.6s;
             transform-style: preserve-3d;
             height: 120px;
-            background-color: #0d6efd;
-            color: white;
-            border-radius: 10px;
+            background-color: var(--tech-dark);
+            border: 1px solid var(--tech-primary);
+            color: var(--tech-primary);
+            border-radius: 8px;
         }
 
         .card-flip.flipped {
             transform: rotateY(180deg);
-            background-color: white;
-            color: black;
+            background-color: var(--tech-dark);
+            border: 1px solid var(--tech-accent);
+            color: white;
         }
 
         .card-body {
@@ -36,21 +47,99 @@
         .display-6 {
             font-size: 2rem;
             font-weight: 300;
+            color: var(--tech-primary);
         }
 
         .difficulty-btn {
             transition: all 0.3s;
+            background-color: var(--tech-dark);
+            border: 1px solid var(--tech-primary);
+            color: var(--tech-primary);
+        }
+
+        .difficulty-btn:hover {
+            background-color: rgba(0, 255, 136, 0.1);
         }
 
         .difficulty-btn.active {
             transform: scale(1.05);
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            background-color: rgba(0, 255, 136, 0.2);
+        }
+
+        .btn-primary {
+            background-color: var(--tech-primary);
+            border-color: var(--tech-primary);
+            color: var(--tech-dark);
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--tech-secondary);
+            border-color: var(--tech-secondary);
+        }
+
+        .btn-outline-primary {
+            border-color: var(--tech-primary);
+            color: var(--tech-primary);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: rgba(0, 255, 136, 0.1);
+        }
+
+        .card {
+            background-color: var(--tech-dark);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: var(--tech-primary);
+        }
+
+        .alert-success {
+            background-color: rgba(0, 255, 136, 0.1);
+            border-color: var(--tech-primary);
+            color: white;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--tech-primary);
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
+        }
+
+        .theme-selector {
+            background-color: var(--tech-dark);
+            border: 1px solid var(--tech-primary);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .theme-btn {
+            transition: all 0.3s;
+            background-color: var(--tech-dark);
+            border: 1px solid var(--tech-primary);
+            color: var(--tech-primary);
+            margin: 5px;
+        }
+
+        .theme-btn.active {
+            background-color: rgba(0, 255, 136, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
         }
 
         @media (max-width: 576px) {
             .card-flip {
                 height: 80px;
             }
+        }
+
+        .glow-text {
+            text-shadow: 0 0 8px var(--tech-primary);
+        }
+
+        .tech-border {
+            border: 1px solid var(--tech-primary);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
         }
     </style>
 </head>
@@ -72,23 +161,26 @@
             const [gameStarted, setGameStarted] = useState(false);
             const [difficulty, setDifficulty] = useState('normal');
             const [showDifficultySelector, setShowDifficultySelector] = useState(true);
+            const [theme, setTheme] = useState('animals');
             
-            const emojiSets = {
-                easy: ['🐶', '🐱', '🐭', '🐹', '🐰'],
-                normal: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'],
-                challenge: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🦁', '🐮', '🐷', '🐸']
+            // Card sets for different themes
+            const themeSets = {
+                animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🦁', '🐮', '🐷', '🐸'],
+                plants: ['🌵', '🌲', '🌳', '🌴', '🌱', '🌿', '☘️', '🍀', '🍁', '🍄', '🌷', '🌻'],
+                astronomy: ['🌕', '🌖', '🌗', '🌘', '🌑', '🌒', '🌓', '🌔', '☀️', '⭐', '🌟', '🌠']
             };
             
-            // Grid layouts for different difficulties
-            const gridLayouts = {
-                easy: 'row-cols-2 row-cols-sm-3 row-cols-md-4',
-                normal: 'row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5',
-                challenge: 'row-cols-3 row-cols-sm-4 row-cols-md-5 row-cols-lg-6'
+            // Difficulty settings
+            const difficultySettings = {
+                easy: { pairs: 5, cols: 'row-cols-2 row-cols-sm-3 row-cols-md-4' },
+                normal: { pairs: 8, cols: 'row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5' },
+                challenge: { pairs: 12, cols: 'row-cols-3 row-cols-sm-4 row-cols-md-5 row-cols-lg-6' }
             };
             
             // Initialize game
             const initGame = (selectedDifficulty = difficulty) => {
-                const selectedEmojis = emojiSets[selectedDifficulty];
+                const { pairs } = difficultySettings[selectedDifficulty];
+                const selectedEmojis = themeSets[theme].slice(0, pairs);
                 
                 // Create pairs of cards
                 const cardPairs = [...selectedEmojis, ...selectedEmojis];
@@ -148,12 +240,12 @@
                 return () => clearInterval(interval);
             }, [gameStarted, gameWon]);
             
-            // Initialize game when difficulty changes
+            // Initialize game when difficulty or theme changes
             useEffect(() => {
                 if (!showDifficultySelector) {
                     initGame();
                 }
-            }, [difficulty, showDifficultySelector]);
+            }, [difficulty, theme, showDifficultySelector]);
             
             // Format time
             const formatTime = (seconds) => {
@@ -172,41 +264,71 @@
                 setGameStarted(false);
             };
             
+            const selectTheme = (selectedTheme) => {
+                setTheme(selectedTheme);
+            };
+            
             return (
                 <div className="container py-5">
                     <div className="text-center mb-4">
-                        <h1 className="display-4">Memory Match Master</h1>
-                        <p className="lead">Test your memory by matching pairs of cards!</p>
+                        <h1 className="display-4 glow-text">MEMORY MATCH MASTER</h1>
+                        <p className="lead">A challenging memory puzzle</p>
                     </div>
                     
                     {showDifficultySelector ? (
-                        <div className="text-center mb-5">
-                            <h2 className="mb-4">Select Difficulty</h2>
+                        <div className="tech-border p-4 mb-5">
+                            <h2 className="mb-4 text-center glow-text">SELECT GAME PARAMETERS</h2>
+                            
+                            <div className="theme-selector mb-4">
+                                <h5 className="mb-3">THEME SELECTION</h5>
+                                <div className="d-flex flex-wrap justify-content-center">
+                                    <button 
+                                        className={`btn theme-btn ${theme === 'animals' ? 'active' : ''}`}
+                                        onClick={() => selectTheme('animals')}
+                                    >
+                                        🐾 Animals
+                                    </button>
+                                    <button 
+                                        className={`btn theme-btn ${theme === 'plants' ? 'active' : ''}`}
+                                        onClick={() => selectTheme('plants')}
+                                    >
+                                        🌿 Plants
+                                    </button>
+                                    <button 
+                                        className={`btn theme-btn ${theme === 'astronomy' ? 'active' : ''}`}
+                                        onClick={() => selectTheme('astronomy')}
+                                    >
+                                        🌌 Astronomy
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <h5 className="mb-3 text-center">DIFFICULTY LEVEL</h5>
                             <div className="row g-3 justify-content-center">
                                 <div className="col-md-4">
                                     <button 
-                                        className={`btn btn-success btn-lg w-100 py-4 difficulty-btn ${difficulty === 'easy' ? 'active' : ''}`}
+                                        className={`btn btn-lg w-100 py-4 difficulty-btn ${difficulty === 'easy' ? 'active' : ''}`}
                                         onClick={() => selectDifficulty('easy')}
                                     >
-                                        <h3>Easy</h3>
+                                        <h3>EASY MODE</h3>
                                         <p className="mb-0">5 pairs (3×4 grid)</p>
                                     </button>
                                 </div>
                                 <div className="col-md-4">
                                     <button 
-                                        className={`btn btn-primary btn-lg w-100 py-4 difficulty-btn ${difficulty === 'normal' ? 'active' : ''}`}
+                                        className={`btn btn-lg w-100 py-4 difficulty-btn ${difficulty === 'normal' ? 'active' : ''}`}
                                         onClick={() => selectDifficulty('normal')}
                                     >
-                                        <h3>Normal</h3>
+                                        <h3>STANDARD</h3>
                                         <p className="mb-0">8 pairs (4×4 grid)</p>
                                     </button>
                                 </div>
                                 <div className="col-md-4">
                                     <button 
-                                        className={`btn btn-danger btn-lg w-100 py-4 difficulty-btn ${difficulty === 'challenge' ? 'active' : ''}`}
+                                        className={`btn btn-lg w-100 py-4 difficulty-btn ${difficulty === 'challenge' ? 'active' : ''}`}
                                         onClick={() => selectDifficulty('challenge')}
                                     >
-                                        <h3>Challenge</h3>
+                                        <h3>EXPERT</h3>
                                         <p className="mb-0">12 pairs (4×6 grid)</p>
                                     </button>
                                 </div>
@@ -216,53 +338,61 @@
                         <>
                             <div className="row mb-4">
                                 <div className="col-md-3 text-center">
-                                    <div className="card bg-light">
+                                    <div className="card">
                                         <div className="card-body">
-                                            <h5 className="card-title">Difficulty</h5>
+                                            <h5 className="card-title">THEME</h5>
+                                            <p className="card-text text-capitalize">{theme}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-md-2 text-center">
+                                    <div className="card">
+                                        <div className="card-body">
+                                            <h5 className="card-title">LEVEL</h5>
                                             <p className="card-text text-capitalize">{difficulty}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="col-md-3 text-center">
-                                    <div className="card bg-light">
+                                <div className="col-md-2 text-center">
+                                    <div className="card">
                                         <div className="card-body">
-                                            <h5 className="card-title">Moves</h5>
+                                            <h5 className="card-title">MOVES</h5>
                                             <p className="card-text display-6">{moves}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="col-md-3 text-center">
-                                    <div className="card bg-light">
+                                <div className="col-md-2 text-center">
+                                    <div className="card">
                                         <div className="card-body">
-                                            <h5 className="card-title">Time</h5>
+                                            <h5 className="card-title">TIME</h5>
                                             <p className="card-text display-6">{formatTime(timer)}</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="col-md-3 text-center">
                                     <button 
-                                        className="btn btn-secondary btn-lg w-100 h-100"
+                                        className="btn btn-outline-primary btn-lg w-100 h-100"
                                         onClick={showDifficultyMenu}
                                     >
-                                        Change Difficulty
+                                        CHANGE SETTINGS
                                     </button>
                                 </div>
                             </div>
                             
                             {gameWon && (
-                                <div className="alert alert-success text-center">
-                                    <h4>Congratulations! You won!</h4>
-                                    <p>You completed the {difficulty} level in {moves} moves and {formatTime(timer)}!</p>
+                                <div className="alert alert-success text-center tech-border">
+                                    <h4>GAME COMPLETE!</h4>
+                                    <p>You mastered the {theme} theme on {difficulty} difficulty in {moves} moves and {formatTime(timer)}!</p>
                                     <button className="btn btn-primary" onClick={initGame}>
-                                        Play Again
+                                        NEW GAME
                                     </button>
                                     <button className="btn btn-outline-primary ms-2" onClick={showDifficultyMenu}>
-                                        Change Difficulty
+                                        CHANGE SETTINGS
                                     </button>
                                 </div>
                             )}
                             
-                            <div className={`row ${gridLayouts[difficulty]} g-3`}>
+                            <div className={`row ${difficultySettings[difficulty].cols} g-3`}>
                                 {cards.map(card => (
                                     <div key={card.id} className="col">
                                         <div 
@@ -272,7 +402,7 @@
                                         >
                                             <div className="card-body d-flex justify-content-center align-items-center">
                                                 <span className="display-4">
-                                                    {flipped.includes(card.id) || solved.includes(card.id) ? card.emoji : '❓'}
+                                                    {flipped.includes(card.id) || solved.includes(card.id) ? card.emoji : '⌛'}
                                                 </span>
                                             </div>
                                         </div>
@@ -283,7 +413,7 @@
                     )}
                     
                     <footer className="mt-5 text-center text-muted">
-                        <p>Memory Match Master </p>
+                        <p>MEMORY MATCH MASTER v2.0 &copy; {new Date().getFullYear()}</p>
                     </footer>
                 </div>
             );
