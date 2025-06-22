@@ -15,7 +15,7 @@
         }
 
         .card-flip {
-            transition: transform 1s;
+            transition: transform 0.6s;
             transform-style: preserve-3d;
             height: 120px;
             background-color: #0d6efd;
@@ -36,6 +36,15 @@
         .display-6 {
             font-size: 2rem;
             font-weight: 300;
+        }
+
+        .difficulty-btn {
+            transition: all 0.3s;
+        }
+
+        .difficulty-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
         }
 
         @media (max-width: 576px) {
@@ -61,13 +70,28 @@
             const [gameWon, setGameWon] = useState(false);
             const [timer, setTimer] = useState(0);
             const [gameStarted, setGameStarted] = useState(false);
+            const [difficulty, setDifficulty] = useState('normal');
+            const [showDifficultySelector, setShowDifficultySelector] = useState(true);
             
-            const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🦁', '🐮'];
+            const emojiSets = {
+                easy: ['🐶', '🐱', '🐭', '🐹', '🐰'],
+                normal: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'],
+                challenge: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🦁', '🐮', '🐷', '🐸']
+            };
+            
+            // Grid layouts for different difficulties
+            const gridLayouts = {
+                easy: 'row-cols-2 row-cols-sm-3 row-cols-md-4',
+                normal: 'row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5',
+                challenge: 'row-cols-3 row-cols-sm-4 row-cols-md-5 row-cols-lg-6'
+            };
             
             // Initialize game
-            const initGame = () => {
+            const initGame = (selectedDifficulty = difficulty) => {
+                const selectedEmojis = emojiSets[selectedDifficulty];
+                
                 // Create pairs of cards
-                const cardPairs = [...emojis, ...emojis];
+                const cardPairs = [...selectedEmojis, ...selectedEmojis];
                 
                 // Shuffle cards
                 const shuffledCards = cardPairs
@@ -81,6 +105,7 @@
                 setGameWon(false);
                 setTimer(0);
                 setGameStarted(false);
+                setShowDifficultySelector(false);
             };
             
             // Handle card click
@@ -123,16 +148,28 @@
                 return () => clearInterval(interval);
             }, [gameStarted, gameWon]);
             
-            // Initialize game on first render
+            // Initialize game when difficulty changes
             useEffect(() => {
-                initGame();
-            }, []);
+                if (!showDifficultySelector) {
+                    initGame();
+                }
+            }, [difficulty, showDifficultySelector]);
             
             // Format time
             const formatTime = (seconds) => {
                 const mins = Math.floor(seconds / 60);
                 const secs = seconds % 60;
                 return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            };
+            
+            const selectDifficulty = (level) => {
+                setDifficulty(level);
+                setShowDifficultySelector(false);
+            };
+            
+            const showDifficultyMenu = () => {
+                setShowDifficultySelector(true);
+                setGameStarted(false);
             };
             
             return (
@@ -142,57 +179,111 @@
                         <p className="lead">Test your memory by matching pairs of cards!</p>
                     </div>
                     
-                    <div className="row mb-4">
-                        <div className="col-md-4 text-center">
-                            <div className="card bg-light">
-                                <div className="card-body">
-                                    <h5 className="card-title">Moves</h5>
-                                    <p className="card-text display-6">{moves}</p>
+                    {showDifficultySelector ? (
+                        <div className="text-center mb-5">
+                            <h2 className="mb-4">Select Difficulty</h2>
+                            <div className="row g-3 justify-content-center">
+                                <div className="col-md-4">
+                                    <button 
+                                        className={`btn btn-success btn-lg w-100 py-4 difficulty-btn ${difficulty === 'easy' ? 'active' : ''}`}
+                                        onClick={() => selectDifficulty('easy')}
+                                    >
+                                        <h3>Easy</h3>
+                                        <p className="mb-0">5 pairs (3×4 grid)</p>
+                                    </button>
+                                </div>
+                                <div className="col-md-4">
+                                    <button 
+                                        className={`btn btn-primary btn-lg w-100 py-4 difficulty-btn ${difficulty === 'normal' ? 'active' : ''}`}
+                                        onClick={() => selectDifficulty('normal')}
+                                    >
+                                        <h3>Normal</h3>
+                                        <p className="mb-0">8 pairs (4×4 grid)</p>
+                                    </button>
+                                </div>
+                                <div className="col-md-4">
+                                    <button 
+                                        className={`btn btn-danger btn-lg w-100 py-4 difficulty-btn ${difficulty === 'challenge' ? 'active' : ''}`}
+                                        onClick={() => selectDifficulty('challenge')}
+                                    >
+                                        <h3>Challenge</h3>
+                                        <p className="mb-0">12 pairs (4×6 grid)</p>
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-4 text-center">
-                            <div className="card bg-light">
-                                <div className="card-body">
-                                    <h5 className="card-title">Time</h5>
-                                    <p className="card-text display-6">{formatTime(timer)}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-4 text-center">
-                            <button className="btn btn-primary btn-lg w-100 h-100" onClick={initGame}>
-                                New Game
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {gameWon && (
-                        <div className="alert alert-success text-center">
-                            <h4>Congratulations! You won!</h4>
-                            <p>You completed the game in {moves} moves and {formatTime(timer)}!</p>
-                        </div>
-                    )}
-                    
-                    <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
-                        {cards.map(card => (
-                            <div key={card.id} className="col">
-                                <div 
-                                    className={`card h-100 card-flip ${flipped.includes(card.id) || solved.includes(card.id) ? 'flipped' : ''}`}
-                                    onClick={() => handleCardClick(card.id)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <div className="card-body d-flex justify-content-center align-items-center">
-                                        <span className="display-4">
-                                            {flipped.includes(card.id) || solved.includes(card.id) ? card.emoji : '❓'}
-                                        </span>
+                    ) : (
+                        <>
+                            <div className="row mb-4">
+                                <div className="col-md-3 text-center">
+                                    <div className="card bg-light">
+                                        <div className="card-body">
+                                            <h5 className="card-title">Difficulty</h5>
+                                            <p className="card-text text-capitalize">{difficulty}</p>
+                                        </div>
                                     </div>
                                 </div>
+                                <div className="col-md-3 text-center">
+                                    <div className="card bg-light">
+                                        <div className="card-body">
+                                            <h5 className="card-title">Moves</h5>
+                                            <p className="card-text display-6">{moves}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-md-3 text-center">
+                                    <div className="card bg-light">
+                                        <div className="card-body">
+                                            <h5 className="card-title">Time</h5>
+                                            <p className="card-text display-6">{formatTime(timer)}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-md-3 text-center">
+                                    <button 
+                                        className="btn btn-secondary btn-lg w-100 h-100"
+                                        onClick={showDifficultyMenu}
+                                    >
+                                        Change Difficulty
+                                    </button>
+                                </div>
                             </div>
-                        ))}
-                    </div>
+                            
+                            {gameWon && (
+                                <div className="alert alert-success text-center">
+                                    <h4>Congratulations! You won!</h4>
+                                    <p>You completed the {difficulty} level in {moves} moves and {formatTime(timer)}!</p>
+                                    <button className="btn btn-primary" onClick={initGame}>
+                                        Play Again
+                                    </button>
+                                    <button className="btn btn-outline-primary ms-2" onClick={showDifficultyMenu}>
+                                        Change Difficulty
+                                    </button>
+                                </div>
+                            )}
+                            
+                            <div className={`row ${gridLayouts[difficulty]} g-3`}>
+                                {cards.map(card => (
+                                    <div key={card.id} className="col">
+                                        <div 
+                                            className={`card h-100 card-flip ${flipped.includes(card.id) || solved.includes(card.id) ? 'flipped' : ''}`}
+                                            onClick={() => handleCardClick(card.id)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <div className="card-body d-flex justify-content-center align-items-center">
+                                                <span className="display-4">
+                                                    {flipped.includes(card.id) || solved.includes(card.id) ? card.emoji : '❓'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
                     
                     <footer className="mt-5 text-center text-muted">
-                        <p>Memory Match Master</p>
+                        <p>Memory Match Master &copy; {new Date().getFullYear()}</p>
                     </footer>
                 </div>
             );
